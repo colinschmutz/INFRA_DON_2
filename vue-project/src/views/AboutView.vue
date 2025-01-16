@@ -4,11 +4,13 @@ import PouchDB from 'pouchdb'
 
 declare interface Post {
   _id: string,
+  _rev?: string
   doc: {
     post_name: string,
     post_content: string,
     attributes: {
       creation_date: string
+      modified: string
     }
   }
 }
@@ -24,20 +26,74 @@ export default {
   },
 
   mounted() {
-    this.initDatabase();
-    this.fetchData();
+    this.initDatabase()
+    this.fetchData()
+    this.createData({
+      _id: '1',
+      doc: {
+        post_name: 'post no. 1',
+        post_content: 'salut les mecs',
+        attributes: {
+          creation_date: '2025-01-09',
+          modified: 'not yet'
+        }
+      }
+    })
+    this.updateData({
+      _id: '1',
+      doc: {
+        post_name: 'post no. 2',
+        post_content: 'ça joue ?',
+        attributes: {
+          creation_date: '2025-01-09',
+          modified: 'yes'
+        }
+      }
+    })
   },
 
   methods: {
 
-    putDocument(document: Post) {
-      const db = ref(this.storage).value;
-      if (db) {
-        db.put(document).then(() => {
-          console.log('Add ok');
-        }).catch((error) => {
-          console.log('Add ko', error);
-        })
+    async updateData(document: Post) {
+      const db = this.storage
+
+      // Vérifie si le stockage est défini
+      if (!db) {
+        console.error("Le stockage n'est pas défini.")
+        return
+      }
+
+      try {
+        // Récupére le document existant pour obtenir son _rev (version)
+        const existingDoc = await db.get(document._id)
+        document._rev = existingDoc._rev // Assigner _rev pour la mise à jour
+
+        // Mise à jour du document
+        await db.put(document)
+        console.log('Mise à jour réussie')
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour', error)
+      }
+    },
+
+    async deleteData(document: Post) {
+      console.log('entrée dans la méthode delete')
+      const db = this.storage
+
+      // Vérifie si le stockage est bien défini
+      if (!db) {
+        console.error("Le stockage n'est pas défini.")
+        return
+      }
+
+      try {
+        // Récupére le document existant pour obtenir son _rev
+        const existingDoc = await db.get(document._id)
+        await db.remove(existingDoc._id, existingDoc._rev)
+        console.log('Suppression réussie')
+      } catch (error) {
+        console.log('catch delete')
+        console.error('Erreur lors de la suppression', error)
       }
     },
 
@@ -66,17 +122,28 @@ export default {
       }
       this.storage = db;
     }
+
+    /* addPost(
+    {
+      const storage = ref(this.storage);
+      db.post({
+        _post_name: 'colin',
+        _post_content: 'salut les mecs'
+    }) */
+
   },
 
 }
+
 </script>
 
 <template>
   <h1>Nombre de post: {{ postsData.length }}</h1>
   <ul>
     <li v-for="post in postsData" :key="post._id">
-      <div class="ucfirst">{{ post.doc.post_name }}<em style="font-size: x-small;"
-          v-if="post.doc.attributes?.creation_date">
+      <div class="ucfirst">
+        {{ post.doc.post_name
+        }}<em style="font-size: x-small" v-if="post.doc.attributes?.creation_date">
           - {{ post.doc.attributes?.creation_date }}
         </em>
       </div>
