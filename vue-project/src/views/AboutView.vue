@@ -3,17 +3,16 @@ import { ref } from 'vue';
 import PouchDB from 'pouchdb'
 
 declare interface Post {
-  _id: string,
+  _id?: string,
   _rev?: string
-  doc: {
-    post_name: string,
-    post_content: string,
-    attributes: {
+  post_name: string,
+  post_content: string,
+  attributes: {
       creation_date: string
       modified: string
-    }
   }
 }
+
 
 export default {
   data() {
@@ -22,7 +21,8 @@ export default {
       postsData: [] as Post[],
       document: null as Post | null,
       storage: null as PouchDB.Database | null,
-    };
+      isFetched: false //Pour savoir si les données ont été récupérées
+    }
   },
 
   mounted() {
