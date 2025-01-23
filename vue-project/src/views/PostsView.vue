@@ -1,6 +1,6 @@
 <script lang="ts">
 import PouchDB from 'pouchdb'
-import findPlugin from 'pouchdb-find'
+//import findPlugin from 'pouchdb-find'
 PouchDB.plugin(findPlugin)
 
 // Déclaration de l'interface Post
